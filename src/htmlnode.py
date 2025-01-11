@@ -1,5 +1,6 @@
 from typing import Self
 
+
 class HTMLNode:
     def __init__(self, tag: str = None, value: str = None, children: list[Self] = None, props: dict[str, str] = None):
         """
@@ -18,7 +19,7 @@ class HTMLNode:
     def to_html(self):
         raise NotImplementedError()
 
-    def props_to_html(self):
+    def props_to_html(self) -> str:
         html_props = ""
         if not self.props:
             return html_props
@@ -26,5 +27,17 @@ class HTMLNode:
             html_props += f' {prop}="{value}"'
         return html_props
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"HTMLNode({self.tag=}, {self.value=}, children={len(self.children)}, props={self.props_to_html()})"
+
+
+class LeafNode(HTMLNode):
+    def __init__(self, tag: str | None, value: str, props: dict[str, str] = None):
+        super().__init__(tag=tag, value=value, props=props)
+
+    def to_html(self) -> str:
+        if not self.value:
+            raise ValueError("Value required in LeafNode.")
+        if not self.tag:
+            return self.value
+        return f"<{self.tag}{self.props_to_html()}>{self.value}</{self.tag}>"
