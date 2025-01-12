@@ -23,24 +23,6 @@ def split_nodes_delimiter(old_nodes: list[TextNode], delimiter: str, text_type: 
         new_nodes.extend(split_nodes_delimiter([TextNode(split_text[2], TextType.TEXT)], delimiter, text_type))
     return new_nodes
 
-
-# def split_nodes_image(old_nodes: list[TextNode]) -> list[TextNode]:
-#     new_nodes: list[TextNode] = []
-#     for node in old_nodes:
-#         text = node.text
-#         matches = extract_markdown_images(text)
-#         if len(matches) == 0:
-#             new_nodes.append(node)
-#             continue
-#         match = matches[0]
-#         split_text = text.split(f"![{match[0]}]({match[1]})", maxsplit=1)
-#         new_nodes.append(TextNode(split_text[0], TextType.TEXT))
-#         new_nodes.append(TextNode(match[0], TextType.IMAGE, match[1]))
-#         if split_text[1] != "":
-#             other_text = TextNode(split_text[1], TextType.TEXT)
-#             new_nodes.extend(split_nodes_image([other_text]))
-#     return new_nodes
-
 def split_nodes_image(old_nodes: list[TextNode]) -> list[TextNode]:
     return split_nodes(old_nodes, extract_markdown_images,
                        lambda x: f"![{x[0]}]({x[1]})",
@@ -78,6 +60,15 @@ def extract_markdown_images(text: str) -> list[tuple[str, str]]:
     matches = re.findall(r"!\[(.*?)]\((.+?)\)", text)
     return matches
 
+
 def extract_markdown_links(text: str) -> list[tuple[str, str]]:
     matches = re.findall(r"\[(.*?)]\((.+?)\)", text)
     return matches
+
+
+def text_to_textnodes(text: str) -> list[TextNode]:
+    start_nodes = [TextNode(text, TextType.TEXT)]
+    italic_extractor = lambda nodes: split_nodes_delimiter(nodes, "*", TextType.ITALIC)
+    bold_extractor = lambda nodes: split_nodes_delimiter(nodes, "**", TextType.BOLD)
+    code_extractor = lambda nodes: split_nodes_delimiter(nodes, "`", TextType.CODE)
+    return split_nodes_link(split_nodes_image(code_extractor(italic_extractor(bold_extractor(start_nodes)))))

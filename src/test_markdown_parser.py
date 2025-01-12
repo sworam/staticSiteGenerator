@@ -1,7 +1,7 @@
 import unittest
 
 from markdown_parser import (split_nodes_delimiter, TextNode, TextType, extract_markdown_images, split_nodes_image,
-                             split_nodes_link, extract_markdown_links)
+                             split_nodes_link, extract_markdown_links, text_to_textnodes)
 
 
 class TestSplitNodesDelimiter(unittest.TestCase):
@@ -248,3 +248,81 @@ class TestSplitNodesLink(unittest.TestCase):
                           TextNode("link2", TextType.LINK, url="https://google.com")]
         actual = split_nodes_link(old_nodes)
         self.assertEqual(actual, expected_nodes)
+
+
+class TestTextToTextnodes(unittest.TestCase):
+    def test_text_to_text_nodes_differentTextTypes(self):
+        text = ("This is **text** with an *italic* word and a `code block` "
+                "and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)")
+        expected = [
+            TextNode("This is ", TextType.TEXT),
+            TextNode("text", TextType.BOLD),
+            TextNode(" with an ", TextType.TEXT),
+            TextNode("italic", TextType.ITALIC),
+            TextNode(" word and a ", TextType.TEXT),
+            TextNode("code block", TextType.CODE),
+            TextNode(" and an ", TextType.TEXT),
+            TextNode("obi wan image", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg"),
+            TextNode(" and a ", TextType.TEXT),
+            TextNode("link", TextType.LINK, "https://boot.dev"),
+        ]
+        actual = text_to_textnodes(text)
+        self.assertEqual(actual, expected)
+
+    def test_text_to_text_node_plainText(self):
+        text = "This is plain text."
+        expected = [TextNode("This is plain text.", TextType.TEXT)]
+        actual = text_to_textnodes(text)
+        self.assertEqual(actual, expected)
+
+    def test_text_to_text_node_boldText(self):
+        text = "Text with **bold** text."
+        expected = [TextNode("Text with ", TextType.TEXT),
+                    TextNode("bold", TextType.BOLD),
+                    TextNode(" text.", TextType.TEXT)]
+        actual = text_to_textnodes(text)
+        self.assertEqual(actual, expected)
+
+    def test_text_to_text_node_italicText(self):
+        text = "Text with *italic* text."
+        expected = [TextNode("Text with ", TextType.TEXT),
+                    TextNode("italic", TextType.ITALIC),
+                    TextNode(" text.", TextType.TEXT)]
+        actual = text_to_textnodes(text)
+        self.assertEqual(actual, expected)
+
+    def test_text_to_text_node_italicAndBoldText(self):
+        text = "Text with *italic* and **bold** text."
+        expected = [TextNode("Text with ", TextType.TEXT),
+                    TextNode("italic", TextType.ITALIC),
+                    TextNode(" and ", TextType.TEXT),
+                    TextNode("bold", TextType.BOLD),
+                    TextNode(" text.", TextType.TEXT)]
+        actual = text_to_textnodes(text)
+        self.assertEqual(actual, expected)
+
+    def test_text_to_text_node_codeText(self):
+        text = "Text with `code` text."
+        expected = [TextNode("Text with ", TextType.TEXT),
+                    TextNode("code", TextType.CODE),
+                    TextNode(" text.", TextType.TEXT)]
+        actual = text_to_textnodes(text)
+        self.assertEqual(actual, expected)
+
+    def test_text_to_text_node_imageText(self):
+        text = "Text with ![image](https://image.png) text."
+        expected = [TextNode("Text with ", TextType.TEXT),
+                    TextNode("image", TextType.IMAGE, url="https://image.png"),
+                    TextNode(" text.", TextType.TEXT)]
+        actual = text_to_textnodes(text)
+        self.assertEqual(actual, expected)
+
+    def test_text_to_text_node_linkText(self):
+        text = "Text with [to bootdev](https://boot.dev) text."
+        expected = [TextNode("Text with ", TextType.TEXT),
+                    TextNode("to bootdev", TextType.LINK, url="https://boot.dev"),
+                    TextNode(" text.", TextType.TEXT)]
+        actual = text_to_textnodes(text)
+        self.assertEqual(actual, expected)
+
+
