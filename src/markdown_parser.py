@@ -1,8 +1,9 @@
 import re
 from enum import Enum, auto
+from functools import reduce
 from typing import Callable
 
-from src.htmlnode import HTMLNode
+from src.htmlnode import HTMLNode, ParentNode, LeafNode, text_node_to_html_node
 from textnode import TextNode, TextType
 
 
@@ -77,12 +78,28 @@ def extract_markdown_links(text: str) -> list[tuple[str, str]]:
     return matches
 
 
-def text_to_textnodes(text: str) -> list[TextNode]:
+def extract_list_item(text_nodes: list[TextNode]) -> list[TextNode]:
+    new_nodes: list[TextNode] = []
+    for text_node in text_nodes:
+        matches = re.findall(r"^((\*|\d+\.) )(.*)", text_node.text)
+        if len(matches) == 0:
+            new_nodes.append(text_node)
+            continue
+        new_nodes.append(TextNode(matches[0][-1].strip(), TextType.TEXT))
+    return new_nodes
+
+
+def line_to_textnodes(text: str) -> list[TextNode]:
     start_nodes = [TextNode(text, TextType.TEXT)]
     italic_extractor = lambda nodes: split_nodes_delimiter(nodes, "*", TextType.ITALIC)
     bold_extractor = lambda nodes: split_nodes_delimiter(nodes, "**", TextType.BOLD)
     code_extractor = lambda nodes: split_nodes_delimiter(nodes, "`", TextType.CODE)
-    return split_nodes_link(split_nodes_image(code_extractor(italic_extractor(bold_extractor(start_nodes)))))
+    list_nodes = extract_list_item(start_nodes)
+    bold_nodes = bold_extractor(list_nodes)
+    italic_nodes = italic_extractor(bold_nodes)
+    code_nodes = code_extractor(italic_nodes)
+    image_nodes = split_nodes_image(code_nodes)
+    return split_nodes_link(image_nodes)
 
 
 def markdown_to_blocks(markdown: str) -> list[str]:
@@ -116,3 +133,43 @@ def block_to_block_type(block: str) -> BlockType:
     if all_lines_start_with(lines, r"\d+\. "):
         return BlockType.ORDERED
     return BlockType.PARAGRAPH
+
+
+def text_to_leaf_nodes(text: str, tag: str = None) -> list[LeafNode]:
+    lines = text.split("\n")
+    list_text_nodes = list(map(line_to_textnodes, lines))
+    text_nodes = reduce(lambda x, y: x + y, list_text_nodes)
+    html_nodes = list(map(text_node_to_html_node, text_nodes))
+    if tag:
+        for node in html_nodes:
+            node.tag = tag
+    return html_nodes
+
+
+def block_to_html_node(block: str, block_type: BlockType) -> HTMLNode:
+    #todo: CODE, LINK, IMAGES
+    match block_type:
+        case BlockType.HEADING:
+            heading_type, heading_value = block.split(" ", maxsplit=1)
+            h_num = len(heading_type)
+            return LeafNode(f"h{h_num}", heading_value)
+        case BlockType.PARAGRAPH:
+            leaf_nodes = text_to_leaf_nodes(block)
+            return ParentNode("p", leaf_nodes)
+        case BlockType.UNORDERED:
+            leaf_nodes = text_to_leaf_nodes(block, "li")
+            return ParentNode("ul", leaf_nodes)
+        case BlockType.ORDERED:
+            leaf_nodes = text_to_leaf_nodes(block, "li")
+            return ParentNode("ol", leaf_nodes)
+
+
+def markdown_to_html_node(markdown: str) -> HTMLNode:
+    blocks = markdown_to_blocks(markdown)
+    child_nodes = list()
+    for block in blocks:
+        block_type = block_to_block_type(block)
+        child_nodes.append(block_to_html_node(block, block_type))
+    return ParentNode("div", child_nodes)
+
+

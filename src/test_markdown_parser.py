@@ -1,8 +1,9 @@
 import unittest
 
 from markdown_parser import (split_nodes_delimiter, TextNode, TextType, extract_markdown_images, split_nodes_image,
-                             split_nodes_link, extract_markdown_links, text_to_textnodes, markdown_to_blocks, BlockType,
-                             block_to_block_type)
+                             split_nodes_link, extract_markdown_links, line_to_textnodes, markdown_to_blocks, BlockType,
+                             block_to_block_type, markdown_to_html_node)
+from htmlnode import HTMLNode, ParentNode, LeafNode
 
 
 class TestSplitNodesDelimiter(unittest.TestCase):
@@ -251,8 +252,8 @@ class TestSplitNodesLink(unittest.TestCase):
         self.assertEqual(actual, expected_nodes)
 
 
-class TestTextToTextnodes(unittest.TestCase):
-    def test_text_to_text_nodes_differentTextTypes(self):
+class TestLineToTextnodes(unittest.TestCase):
+    def test_line_to_text_nodes_differentTextTypes(self):
         text = ("This is **text** with an *italic* word and a `code block` "
                 "and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)")
         expected = [
@@ -267,65 +268,70 @@ class TestTextToTextnodes(unittest.TestCase):
             TextNode(" and a ", TextType.TEXT),
             TextNode("link", TextType.LINK, "https://boot.dev"),
         ]
-        actual = text_to_textnodes(text)
+        actual = line_to_textnodes(text)
         self.assertEqual(actual, expected)
 
-    def test_text_to_text_node_plainText(self):
+    def test_line_to_text_nodes_plainText(self):
         text = "This is plain text."
         expected = [TextNode("This is plain text.", TextType.TEXT)]
-        actual = text_to_textnodes(text)
+        actual = line_to_textnodes(text)
         self.assertEqual(actual, expected)
 
-    def test_text_to_text_node_boldText(self):
+    def test_line_to_text_nodes_boldText(self):
         text = "Text with **bold** text."
         expected = [TextNode("Text with ", TextType.TEXT),
                     TextNode("bold", TextType.BOLD),
                     TextNode(" text.", TextType.TEXT)]
-        actual = text_to_textnodes(text)
+        actual = line_to_textnodes(text)
         self.assertEqual(actual, expected)
 
-    def test_text_to_text_node_italicText(self):
+    def test_line_to_text_nodes_italicText(self):
         text = "Text with *italic* text."
         expected = [TextNode("Text with ", TextType.TEXT),
                     TextNode("italic", TextType.ITALIC),
                     TextNode(" text.", TextType.TEXT)]
-        actual = text_to_textnodes(text)
+        actual = line_to_textnodes(text)
         self.assertEqual(actual, expected)
 
-    def test_text_to_text_node_italicAndBoldText(self):
+    def test_line_to_text_nodes_italicAndBoldText(self):
         text = "Text with *italic* and **bold** text."
         expected = [TextNode("Text with ", TextType.TEXT),
                     TextNode("italic", TextType.ITALIC),
                     TextNode(" and ", TextType.TEXT),
                     TextNode("bold", TextType.BOLD),
                     TextNode(" text.", TextType.TEXT)]
-        actual = text_to_textnodes(text)
+        actual = line_to_textnodes(text)
         self.assertEqual(actual, expected)
 
-    def test_text_to_text_node_codeText(self):
+    def test_line_to_text_nodes_codeText(self):
         text = "Text with `code` text."
         expected = [TextNode("Text with ", TextType.TEXT),
                     TextNode("code", TextType.CODE),
                     TextNode(" text.", TextType.TEXT)]
-        actual = text_to_textnodes(text)
+        actual = line_to_textnodes(text)
         self.assertEqual(actual, expected)
 
-    def test_text_to_text_node_imageText(self):
+    def test_line_to_text_nodes_imageText(self):
         text = "Text with ![image](https://image.png) text."
         expected = [TextNode("Text with ", TextType.TEXT),
                     TextNode("image", TextType.IMAGE, url="https://image.png"),
                     TextNode(" text.", TextType.TEXT)]
-        actual = text_to_textnodes(text)
+        actual = line_to_textnodes(text)
         self.assertEqual(actual, expected)
 
-    def test_text_to_text_node_linkText(self):
+    def test_line_to_text_nodes_linkText(self):
         text = "Text with [to bootdev](https://boot.dev) text."
         expected = [TextNode("Text with ", TextType.TEXT),
                     TextNode("to bootdev", TextType.LINK, url="https://boot.dev"),
                     TextNode(" text.", TextType.TEXT)]
-        actual = text_to_textnodes(text)
+        actual = line_to_textnodes(text)
         self.assertEqual(actual, expected)
 
+    def test_line_to_text_nodes_listItem(self):
+        text = "* this is an unordered list item"
+        expected = [TextNode("this is an unordered list item", TextType.TEXT)]
+        actual = line_to_textnodes(text)
+        self.assertEqual(actual, expected)
 
 class TestMarkdownToBlocks(unittest.TestCase):
     def test_markdown_to_blocks_oneBlock(self):
@@ -424,4 +430,35 @@ class TestBlockToBlockType(unittest.TestCase):
         block = "This is a *normal* paragraph with **some** inline `code`."
         expected = BlockType.PARAGRAPH
         actual = block_to_block_type(block)
+        self.assertEqual(actual, expected)
+
+
+class TestMarkdownToHTMLNode(unittest.TestCase):
+    def test_markdown_to_html_node(self):
+        text = "# Heading\n\nParagraph of **bold** text"
+        expected = ParentNode("div", [
+            LeafNode("h1", "Heading"),
+            ParentNode("p", [
+                LeafNode(None, "Paragraph of "),
+                LeafNode("b", "bold"),
+                LeafNode(None, " text"),
+            ]),
+        ])
+
+        actual = markdown_to_html_node(text)
+        self.assertEqual(actual, expected)
+    def test_markdown_to_html_node_Lists(self):
+        text = "* Unordered\n* List\n\n1. Ordered\n2. List"
+        expected = ParentNode("div", [
+            ParentNode("ul", [
+                LeafNode("li", "Unordered"),
+                LeafNode("li", "List"),
+            ]),
+            ParentNode("ol", [
+                LeafNode("li", "Ordered"),
+                LeafNode("li", "List"),
+            ])
+        ])
+
+        actual = markdown_to_html_node(text)
         self.assertEqual(actual, expected)
