@@ -1,7 +1,18 @@
 import re
+from enum import Enum, auto
 from typing import Callable
 
+from src.htmlnode import HTMLNode
 from textnode import TextNode, TextType
+
+
+class BlockType(Enum):
+    PARAGRAPH = auto()
+    HEADING = auto()
+    CODE = auto()
+    QUOTE = auto()
+    UNORDERED = auto()
+    ORDERED = auto()
 
 
 def split_nodes_delimiter(old_nodes: list[TextNode], delimiter: str, text_type: TextType) -> list[TextNode]:
@@ -83,3 +94,25 @@ def markdown_to_blocks(markdown: str) -> list[str]:
             block = "\n".join(list(map(lambda line: line.strip(), block.split("\n"))))
         stripped_blocks.append(block)
     return stripped_blocks
+
+
+def all_lines_start_with(lines: list[str], start: str) -> bool:
+    for line in lines:
+        if not re.match(start, line):
+            return False
+    return True
+
+
+def block_to_block_type(block: str) -> BlockType:
+    lines = block.split("\n")
+    if re.match("#{1,6} ", block):
+        return BlockType.HEADING
+    if block.startswith("```") and block.endswith("```"):
+        return BlockType.CODE
+    if all_lines_start_with(lines, "> "):
+        return BlockType.QUOTE
+    if all_lines_start_with(lines, r"\* "):
+        return BlockType.UNORDERED
+    if all_lines_start_with(lines, r"\d+\. "):
+        return BlockType.ORDERED
+    return BlockType.PARAGRAPH

@@ -1,7 +1,8 @@
 import unittest
 
 from markdown_parser import (split_nodes_delimiter, TextNode, TextType, extract_markdown_images, split_nodes_image,
-                             split_nodes_link, extract_markdown_links, text_to_textnodes, markdown_to_blocks)
+                             split_nodes_link, extract_markdown_links, text_to_textnodes, markdown_to_blocks, BlockType,
+                             block_to_block_type)
 
 
 class TestSplitNodesDelimiter(unittest.TestCase):
@@ -357,3 +358,70 @@ class TestMarkdownToBlocks(unittest.TestCase):
         actual = markdown_to_blocks(text)
         self.assertEqual(actual, expected)
 
+
+class TestBlockToBlockType(unittest.TestCase):
+    def test_block_to_block_type_heading(self):
+        block = "### This is a heading"
+        expected = BlockType.HEADING
+        actual = block_to_block_type(block)
+        self.assertEqual(actual, expected)
+
+    def test_block_to_block_type_code(self):
+        block = "```\nThis is a code block\n```"
+        expected = BlockType.CODE
+        actual = block_to_block_type(block)
+        self.assertEqual(actual, expected)
+
+    def test_block_to_block_type_codeNotClosed_paragraph(self):
+        block = "```\nThis is a code block"
+        expected = BlockType.PARAGRAPH
+        actual = block_to_block_type(block)
+        self.assertEqual(actual, expected)
+
+    def test_block_to_block_type_quote(self):
+        block = "> This is a quote\n> in multiple lines"
+        expected = BlockType.QUOTE
+        actual = block_to_block_type(block)
+        self.assertEqual(actual, expected)
+
+    def test_block_to_block_type_brokenQuote(self):
+        block = "> This is a quote\n in multiple lines"
+        expected = BlockType.PARAGRAPH
+        actual = block_to_block_type(block)
+        self.assertEqual(actual, expected)
+
+    def test_block_to_block_type_unorderedList(self):
+        block = "* This is a unordered\n* list\n* in multiple lines"
+        expected = BlockType.UNORDERED
+        actual = block_to_block_type(block)
+        self.assertEqual(actual, expected)
+
+    def test_block_to_block_type_brokenUnorderedList(self):
+        block = "* This is a unordered\n1. list\n* in multiple lines"
+        expected = BlockType.PARAGRAPH
+        actual = block_to_block_type(block)
+        self.assertEqual(actual, expected)
+
+    def test_block_to_block_type_orderedList(self):
+        block = "1. This is a unordered\n3. list\n2. in multiple lines"
+        expected = BlockType.ORDERED
+        actual = block_to_block_type(block)
+        self.assertEqual(actual, expected)
+
+    def test_block_to_block_type_orderedListHighOrder(self):
+        block = "1. This is a unordered\n3. list\n20. in multiple lines"
+        expected = BlockType.ORDERED
+        actual = block_to_block_type(block)
+        self.assertEqual(actual, expected)
+
+    def test_block_to_block_type_brokenOrderedList(self):
+        block = "1. This is a unordered\n* list\n2. in multiple lines"
+        expected = BlockType.PARAGRAPH
+        actual = block_to_block_type(block)
+        self.assertEqual(actual, expected)
+
+    def test_block_to_block_type_normalParagraph(self):
+        block = "This is a *normal* paragraph with **some** inline `code`."
+        expected = BlockType.PARAGRAPH
+        actual = block_to_block_type(block)
+        self.assertEqual(actual, expected)
