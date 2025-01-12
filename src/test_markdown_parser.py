@@ -1,7 +1,7 @@
 import unittest
 
 from markdown_parser import (split_nodes_delimiter, TextNode, TextType, extract_markdown_images, split_nodes_image,
-                             split_nodes_link, extract_markdown_links, text_to_textnodes)
+                             split_nodes_link, extract_markdown_links, text_to_textnodes, markdown_to_blocks)
 
 
 class TestSplitNodesDelimiter(unittest.TestCase):
@@ -325,4 +325,35 @@ class TestTextToTextnodes(unittest.TestCase):
         actual = text_to_textnodes(text)
         self.assertEqual(actual, expected)
 
+
+class TestMarkdownToBlocks(unittest.TestCase):
+    def test_markdown_to_blocks_oneBlock(self):
+        text = "# This is a heading"
+        expected = ["# This is a heading"]
+        actual = markdown_to_blocks(text)
+        self.assertEqual(actual, expected)
+
+    def test_markdown_to_blocks_twoBlocks(self):
+        text = "# This is a heading\n\nThis is a paragraph of text."
+        expected = ["# This is a heading", "This is a paragraph of text."]
+        actual = markdown_to_blocks(text)
+        self.assertEqual(actual, expected)
+
+    def test_markdown_to_blocks_threeBlocks(self):
+        text = "# This is a heading\n\nThis is a paragraph of text.\n\n* This is a list\n* another item\n* and another item"
+        expected = ["# This is a heading", "This is a paragraph of text.", "* This is a list\n* another item\n* and another item"]
+        actual = markdown_to_blocks(text)
+        self.assertEqual(actual, expected)
+
+    def test_markdown_to_blocks_whitespace(self):
+        text = "# This is a heading\n\n\nThis is a paragraph of text."
+        expected = ["# This is a heading", "This is a paragraph of text."]
+        actual = markdown_to_blocks(text)
+        self.assertEqual(actual, expected)
+
+    def test_markdown_to_blocks_whitespaceInBlock(self):
+        text = "# This is a heading\n\nThis is a paragraph of text.\n\n* This is a list\n* another item  \n* and another item"
+        expected = ["# This is a heading", "This is a paragraph of text.", "* This is a list\n* another item\n* and another item"]
+        actual = markdown_to_blocks(text)
+        self.assertEqual(actual, expected)
 

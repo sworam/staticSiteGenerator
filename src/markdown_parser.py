@@ -72,3 +72,14 @@ def text_to_textnodes(text: str) -> list[TextNode]:
     bold_extractor = lambda nodes: split_nodes_delimiter(nodes, "**", TextType.BOLD)
     code_extractor = lambda nodes: split_nodes_delimiter(nodes, "`", TextType.CODE)
     return split_nodes_link(split_nodes_image(code_extractor(italic_extractor(bold_extractor(start_nodes)))))
+
+
+def markdown_to_blocks(markdown: str) -> list[str]:
+    raw_blocks = markdown.split("\n\n")
+    stripped_blocks = list()
+    for block in raw_blocks:
+        block = block.strip()
+        if "\n" in block:
+            block = "\n".join(list(map(lambda line: line.strip(), block.split("\n"))))
+        stripped_blocks.append(block)
+    return stripped_blocks
