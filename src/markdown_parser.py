@@ -1,3 +1,4 @@
+import re
 from textnode import TextNode, TextType
 
 
@@ -19,3 +20,8 @@ def split_nodes_delimiter(old_nodes: list[TextNode], delimiter: str, text_type: 
             continue
         new_nodes.extend(split_nodes_delimiter([TextNode(split_text[2], TextType.TEXT)], delimiter, text_type))
     return new_nodes
+
+
+def extract_markdown_images(text: str) -> list[tuple[str, str]]:
+    matches = re.findall(r"!\[([\w ]*)]\(([\w/:.]+)\)", text)
+    return matches

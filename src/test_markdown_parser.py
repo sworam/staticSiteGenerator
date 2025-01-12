@@ -1,6 +1,7 @@
 import unittest
 
-from markdown_parser import split_nodes_delimiter, TextNode, TextType
+from markdown_parser import split_nodes_delimiter, TextNode, TextType, extract_markdown_images
+
 
 class TestSplitNodesDelimiter(unittest.TestCase):
     def test_split_nodes_delimiter_noSubNode(self):
@@ -50,3 +51,41 @@ class TestSplitNodesDelimiter(unittest.TestCase):
             split_nodes_delimiter(old_nodes, "**", TextType.BOLD),
             "*", TextType.ITALIC)
         self.assertEqual(actual_nodes, expected_nodes)
+
+
+class TestExtractMarkdownImages(unittest.TestCase):
+    def test_extract_markdown_images_no_image(self):
+        text = "This is text without an image"
+        expected = []
+        actual = extract_markdown_images(text)
+        self.assertEqual(actual, expected)
+
+    def test_extract_markdown_images_broken_image(self):
+        text = "This is text with ![broken](image"
+        expected = []
+        actual = extract_markdown_images(text)
+        self.assertEqual(actual, expected)
+
+    def test_extract_markdown_images_no_alt(self):
+        text = "This is text with image ![](withoutAlt)"
+        expected = [("", "withoutAlt")]
+        actual = extract_markdown_images(text)
+        self.assertEqual(actual, expected)
+
+    def test_extract_markdown_images_no_url(self):
+        text = "This is text without ![url]()"
+        expected = []
+        actual = extract_markdown_images(text)
+        self.assertEqual(actual, expected)
+
+    def test_extract_markdown_images_one_image(self):
+        text = r"This is text with ![one](https://image.png)"
+        expected = [("one", "https://image.png")]
+        actual = extract_markdown_images(text)
+        self.assertEqual(actual, expected)
+
+    def test_extract_markdown_images_two_images(self):
+        text = r"This is text with ![two](https://image.png) images ![with](https://other.image/image.png)"
+        expected = [("two", "https://image.png"), ("with", "https://other.image/image.png")]
+        actual = extract_markdown_images(text)
+        self.assertEqual(actual, expected)
