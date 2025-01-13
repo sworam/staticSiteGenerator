@@ -3,7 +3,7 @@ import unittest
 from markdown_parser import (split_nodes_delimiter, TextNode, TextType, extract_markdown_images, split_nodes_image,
                              split_nodes_link, extract_markdown_links, line_to_textnodes, markdown_to_blocks, BlockType,
                              block_to_block_type, markdown_to_html_node)
-from htmlnode import HTMLNode, ParentNode, LeafNode
+from htmlnode import ParentNode, LeafNode
 
 
 class TestSplitNodesDelimiter(unittest.TestCase):
@@ -444,7 +444,6 @@ class TestMarkdownToHTMLNode(unittest.TestCase):
                 LeafNode(None, " text"),
             ]),
         ])
-
         actual = markdown_to_html_node(text)
         self.assertEqual(actual, expected)
     def test_markdown_to_html_node_Lists(self):
@@ -459,6 +458,45 @@ class TestMarkdownToHTMLNode(unittest.TestCase):
                 LeafNode("li", "List"),
             ])
         ])
+        actual = markdown_to_html_node(text)
+        self.assertEqual(actual, expected)
 
+    def test_markdown_to_html_node_code(self):
+        text = "```\nThis is code inside a code block\nThis is the second code line\n```"
+        expected = ParentNode("div", [
+            ParentNode("pre", [ParentNode("code", [
+                LeafNode(None, "This is code inside a code block"),
+                LeafNode(None, "This is the second code line")
+            ])])
+        ])
+        actual = markdown_to_html_node(text)
+        self.assertEqual(actual, expected)
+
+
+    def test_markdown_to_html_node_paragraphWithDifferentInlines(self):
+        text = "This is a **bold** paragraph with different *italic* inline `code` blocks like ![images](https://image.png) and links [to obsidian](https://obsidian.md)."
+        expected = ParentNode("div", [ParentNode("p", [
+            LeafNode(None, "This is a "),
+            LeafNode("b", "bold"),
+            LeafNode(None, " paragraph with different "),
+            LeafNode("i", "italic"),
+            LeafNode(None, " inline "),
+            LeafNode("code", "code"),
+            LeafNode(None, " blocks like "),
+            LeafNode("img", "", {"src": "https://image.png", "alt": "images"}),
+            LeafNode(None, " and links "),
+            LeafNode("a", "to obsidian", {"href": "https://obsidian.md"}),
+            LeafNode(None, ".")
+        ])])
+        actual = markdown_to_html_node(text)
+        self.assertEqual(actual, expected)
+
+
+    def test_markdown_to_html_node_blockquote(self):
+        text = "> This is a block quote\n> in multiple lines."
+        expected = ParentNode("div", [ParentNode("blockquote", [
+            LeafNode("p", "This is a block quote"),
+            LeafNode("p", "in multiple lines.")
+        ])])
         actual = markdown_to_html_node(text)
         self.assertEqual(actual, expected)

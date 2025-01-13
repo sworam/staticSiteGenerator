@@ -146,8 +146,22 @@ def text_to_leaf_nodes(text: str, tag: str = None) -> list[LeafNode]:
     return html_nodes
 
 
+def code_block_to_html_node(block: str) -> HTMLNode:
+    lines = block.replace("```", "").split("\n")
+    stripped_lines = list(map(lambda line: line.strip(), lines))
+    lines = filter(lambda line: line != "", stripped_lines)
+    leaf_nodes = [LeafNode(None, line) for line in lines]
+    return ParentNode("pre", [ParentNode("code", leaf_nodes)])
+
+
+def quote_block_to_html_node(block: str) -> HTMLNode:
+    lines = block.replace("> ", "").split("\n")
+    stripped_lines = list(map(lambda line: line.strip(), lines))
+    leaf_nodes = [LeafNode("p", line) for line in stripped_lines]
+    return ParentNode("blockquote", leaf_nodes)
+
+
 def block_to_html_node(block: str, block_type: BlockType) -> HTMLNode:
-    #todo: CODE, LINK, IMAGES
     match block_type:
         case BlockType.HEADING:
             heading_type, heading_value = block.split(" ", maxsplit=1)
@@ -162,6 +176,10 @@ def block_to_html_node(block: str, block_type: BlockType) -> HTMLNode:
         case BlockType.ORDERED:
             leaf_nodes = text_to_leaf_nodes(block, "li")
             return ParentNode("ol", leaf_nodes)
+        case BlockType.CODE:
+            return code_block_to_html_node(block)
+        case BlockType.QUOTE:
+            return quote_block_to_html_node(block)
 
 
 def markdown_to_html_node(markdown: str) -> HTMLNode:
