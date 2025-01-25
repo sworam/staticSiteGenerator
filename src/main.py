@@ -1,6 +1,8 @@
 import os
 import shutil
 
+from page_generator import generate_page
+
 
 def copy_recursively(src: str, dest: str) -> None:
     if os.path.exists(dest):
@@ -21,6 +23,7 @@ def copy_recursively(src: str, dest: str) -> None:
 
 def main():
     copy_recursively("static", "public")
+    generate_page("content/index.md", "template.html", "public/index.html")
 
 if __name__ == "__main__":
     main()

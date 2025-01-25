@@ -20,6 +20,13 @@ class TestSplitNodesDelimiter(unittest.TestCase):
         actual_nodes = split_nodes_delimiter(old_nodes, "**", TextType.BOLD)
         self.assertEqual(actual_nodes, expected_nodes)
 
+    def test_split_nodes_delimiter_oneSubNodeBoldAtStart(self):
+        old_nodes = [TextNode("**Bold** and normal", TextType.TEXT)]
+        expected_nodes = [TextNode("Bold", TextType.BOLD),
+                          TextNode(" and normal", TextType.TEXT)]
+        actual_nodes = split_nodes_delimiter(old_nodes, "**", TextType.BOLD)
+        self.assertEqual(actual_nodes, expected_nodes)
+
     def test_split_nodes_delimiter_twoSubNode(self):
         old_nodes = [TextNode("Text and *test* and *test2*", TextType.TEXT)]
         expected_nodes = [TextNode("Text and ", TextType.TEXT),
@@ -446,18 +453,29 @@ class TestMarkdownToHTMLNode(unittest.TestCase):
         ])
         actual = markdown_to_html_node(text)
         self.assertEqual(actual, expected)
+
     def test_markdown_to_html_node_Lists(self):
         text = "* Unordered\n* List\n\n1. Ordered\n2. List"
         expected = ParentNode("div", [
             ParentNode("ul", [
-                LeafNode("li", "Unordered"),
-                LeafNode("li", "List"),
+                ParentNode("li", [LeafNode(None, "Unordered")]),
+                ParentNode("li", [LeafNode(None, "List")])
             ]),
             ParentNode("ol", [
-                LeafNode("li", "Ordered"),
-                LeafNode("li", "List"),
+                ParentNode("li", [LeafNode(None, "Ordered")]),
+                ParentNode("li", [LeafNode(None, "List")])
             ])
         ])
+        actual = markdown_to_html_node(text)
+        self.assertEqual(actual, expected)
+
+    def test_markdown_to_html_node_ListWithSubNodes(self):
+        text = "* Unordered\n* italic *List*"
+        expected = ParentNode("div", [
+            ParentNode("ul", [
+                ParentNode("li", [LeafNode(None, "Unordered")]),
+                ParentNode("li", [LeafNode(None, "italic "), LeafNode("i", "List")]),
+            ])])
         actual = markdown_to_html_node(text)
         self.assertEqual(actual, expected)
 
@@ -495,8 +513,8 @@ class TestMarkdownToHTMLNode(unittest.TestCase):
     def test_markdown_to_html_node_blockquote(self):
         text = "> This is a block quote\n> in multiple lines."
         expected = ParentNode("div", [ParentNode("blockquote", [
-            LeafNode("p", "This is a block quote"),
-            LeafNode("p", "in multiple lines.")
+            LeafNode(None, "This is a block quote"),
+            LeafNode(None, "in multiple lines.")
         ])])
         actual = markdown_to_html_node(text)
         self.assertEqual(actual, expected)

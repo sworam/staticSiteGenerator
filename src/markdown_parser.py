@@ -3,7 +3,7 @@ from enum import Enum, auto
 from functools import reduce
 from typing import Callable
 
-from src.htmlnode import HTMLNode, ParentNode, LeafNode, text_node_to_html_node
+from htmlnode import HTMLNode, ParentNode, LeafNode, text_node_to_html_node
 from textnode import TextNode, TextType
 
 
@@ -28,7 +28,8 @@ def split_nodes_delimiter(old_nodes: list[TextNode], delimiter: str, text_type: 
             continue
         if len(split_text) == 2:
             raise ValueError(f"No closing delimiter '{delimiter}' found in text '{node.text}'")
-        new_nodes.append(TextNode(split_text[0], TextType.TEXT))
+        if split_text[0]:   # only add a text node if the first part is not empty. Can happen if string starts with delimiter.
+            new_nodes.append(TextNode(split_text[0], TextType.TEXT))
         new_nodes.append(TextNode(split_text[1], text_type))
         if split_text[2] == "":
             continue
@@ -135,11 +136,26 @@ def block_to_block_type(block: str) -> BlockType:
     return BlockType.PARAGRAPH
 
 
+# def text_to_leaf_nodes(text: str, tag: str = None) -> list[LeafNode]:
+#     lines = text.split("\n")
+#     list_text_nodes = list(map(line_to_textnodes, lines))
+#     text_nodes = reduce(lambda x, y: x + y, list_text_nodes)
+#     html_nodes = list(map(text_node_to_html_node, text_nodes))
+#     if tag:
+#         for node in html_nodes:
+#             node.tag = tag
+#     return html_nodes
+
 def text_to_leaf_nodes(text: str, tag: str = None) -> list[LeafNode]:
     lines = text.split("\n")
     list_text_nodes = list(map(line_to_textnodes, lines))
-    text_nodes = reduce(lambda x, y: x + y, list_text_nodes)
-    html_nodes = list(map(text_node_to_html_node, text_nodes))
+    html_nodes = list()
+    for text_node_list in list_text_nodes:
+        line_html_nodes = list(map(text_node_to_html_node, text_node_list))
+        if tag:
+            html_nodes.append(ParentNode(tag, line_html_nodes))
+        else:
+            html_nodes.extend(line_html_nodes)
     if tag:
         for node in html_nodes:
             node.tag = tag
@@ -157,7 +173,7 @@ def code_block_to_html_node(block: str) -> HTMLNode:
 def quote_block_to_html_node(block: str) -> HTMLNode:
     lines = block.replace("> ", "").split("\n")
     stripped_lines = list(map(lambda line: line.strip(), lines))
-    leaf_nodes = [LeafNode("p", line) for line in stripped_lines]
+    leaf_nodes = [LeafNode(None, line) for line in stripped_lines]
     return ParentNode("blockquote", leaf_nodes)
 
 
