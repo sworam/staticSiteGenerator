@@ -100,7 +100,9 @@ def line_to_textnodes(text: str) -> list[TextNode]:
     italic_nodes = italic_extractor(bold_nodes)
     code_nodes = code_extractor(italic_nodes)
     image_nodes = split_nodes_image(code_nodes)
-    return split_nodes_link(image_nodes)
+    link_nodes = split_nodes_link(image_nodes)
+    filtered_nodes = list(filter(lambda node: not (node.text_type == TextType.TEXT and node.text == ""), link_nodes))
+    return filtered_nodes
 
 
 def markdown_to_blocks(markdown: str) -> list[str]:

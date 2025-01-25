@@ -27,3 +27,9 @@ class TestHTMLNode(unittest.TestCase):
         expected = '<p href="https://www.google.com" target="_blank">This is a paragraph of text.</p>'
         actual = node.to_html()
         self.assertEqual(actual, expected)
+
+    def test_to_html_image(self):
+        node = LeafNode("img", "", {"src": "/images/rivendell.png", "alt": "LOTR image artistmonkeys"})
+        expected = r'<img src="/images/rivendell.png" alt="LOTR image artistmonkeys">'
+        actual = node.to_html()
+        self.assertEqual(actual, expected)

@@ -334,6 +334,12 @@ class TestLineToTextnodes(unittest.TestCase):
         actual = line_to_textnodes(text)
         self.assertEqual(actual, expected)
 
+    def test_line_to_text_nodes_justLink(self):
+        text = "[to bootdev](https://boot.dev)"
+        expected = [TextNode("to bootdev", TextType.LINK, url="https://boot.dev")]
+        actual = line_to_textnodes(text)
+        self.assertEqual(actual, expected)
+
     def test_line_to_text_nodes_listItem(self):
         text = "* this is an unordered list item"
         expected = [TextNode("this is an unordered list item", TextType.TEXT)]

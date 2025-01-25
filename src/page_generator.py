@@ -26,8 +26,20 @@ def generate_page(from_path: str, template_path: str, dest_path: str) -> None:
     title = extract_title(markdown)
     out_text = template.replace("{{ Title }}", title).replace("{{ Content }}", content)
 
-    if not os.path.exists(dest_path):
-        os.makedirs(dest_path)
-
     with open(dest_path, 'w') as f:
         f.write(out_text)
+
+
+def generate_pages_recursive(dir_path_content: str, template_path: str, dest_dir_path: str) -> None:
+    print(f"Generating pages recursively {dir_path_content} to {dest_dir_path} using {template_path}")
+    for item in os.listdir(dir_path_content):
+        item_path = os.path.join(dir_path_content, item)
+        dest_item_path = os.path.join(dest_dir_path, item)
+        print(f"{item_path=}, {dest_item_path=}")
+        if os.path.isdir(item_path):
+            if not os.path.exists(dest_item_path):
+                os.makedirs(dest_item_path)
+            generate_pages_recursive(item_path, template_path, dest_item_path)
+        else:
+            dest_item_path = dest_item_path.replace(".md", ".html")
+            generate_page(item_path, template_path, dest_item_path)
