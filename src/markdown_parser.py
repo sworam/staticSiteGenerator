@@ -82,7 +82,7 @@ def extract_markdown_links(text: str) -> list[tuple[str, str]]:
 def extract_list_item(text_nodes: list[TextNode]) -> list[TextNode]:
     new_nodes: list[TextNode] = []
     for text_node in text_nodes:
-        matches = re.findall(r"^((\*|\d+\.) )(.*)", text_node.text)
+        matches = re.findall(r"^((\*|-|\d+\.) )(.*)", text_node.text)
         if len(matches) == 0:
             new_nodes.append(text_node)
             continue
