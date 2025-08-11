@@ -92,7 +92,7 @@ def extract_list_item(text_nodes: list[TextNode]) -> list[TextNode]:
 
 def line_to_textnodes(text: str) -> list[TextNode]:
     start_nodes = [TextNode(text, TextType.TEXT)]
-    italic_extractor = lambda nodes: split_nodes_delimiter(nodes, "*", TextType.ITALIC)
+    italic_extractor = lambda nodes: split_nodes_delimiter(nodes, "_", TextType.ITALIC)
     bold_extractor = lambda nodes: split_nodes_delimiter(nodes, "**", TextType.BOLD)
     code_extractor = lambda nodes: split_nodes_delimiter(nodes, "`", TextType.CODE)
     list_nodes = extract_list_item(start_nodes)
