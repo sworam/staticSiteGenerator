@@ -131,22 +131,11 @@ def block_to_block_type(block: str) -> BlockType:
         return BlockType.CODE
     if all_lines_start_with(lines, ">"):
         return BlockType.QUOTE
-    if all_lines_start_with(lines, r"\* "):
+    if all_lines_start_with(lines, r"\* ") or all_lines_start_with(lines, r"\- "):
         return BlockType.UNORDERED
     if all_lines_start_with(lines, r"\d+\. "):
         return BlockType.ORDERED
     return BlockType.PARAGRAPH
-
-
-# def text_to_leaf_nodes(text: str, tag: str = None) -> list[LeafNode]:
-#     lines = text.split("\n")
-#     list_text_nodes = list(map(line_to_textnodes, lines))
-#     text_nodes = reduce(lambda x, y: x + y, list_text_nodes)
-#     html_nodes = list(map(text_node_to_html_node, text_nodes))
-#     if tag:
-#         for node in html_nodes:
-#             node.tag = tag
-#     return html_nodes
 
 def text_to_leaf_nodes(text: str, tag: str = None) -> list[LeafNode]:
     lines = text.split("\n")
