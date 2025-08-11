@@ -28,8 +28,8 @@ def main():
     else:
         basepath = "/"
 
-    copy_recursively("static", "docs")
-    generate_pages_recursive("content", "template.html", "docs", basepath)
+    copy_recursively("../static", "../docs")
+    generate_pages_recursive("../content", "../template.html", "../docs", basepath)
 
 if __name__ == "__main__":
     main()

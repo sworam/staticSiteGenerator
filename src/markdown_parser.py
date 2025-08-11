@@ -129,7 +129,7 @@ def block_to_block_type(block: str) -> BlockType:
         return BlockType.HEADING
     if block.startswith("```") and block.endswith("```"):
         return BlockType.CODE
-    if all_lines_start_with(lines, "> "):
+    if all_lines_start_with(lines, ">"):
         return BlockType.QUOTE
     if all_lines_start_with(lines, r"\* "):
         return BlockType.UNORDERED
